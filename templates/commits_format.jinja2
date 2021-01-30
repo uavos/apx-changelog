@@ -1,0 +1,29 @@
+{% macro print_group(commits, group, title) %}
+{% if group in commits.groups %}
+# {{ title }}
+{% for commit in commits.groups[group] %}
+* {{ "`" + commit.specific + "` " if commit.specific }}{{ commit.description.strip() }}
+{% endfor %}
+
+{% endif %}
+{% endmacro %}
+
+{% macro print_commits(commits) %}
+{{ print_group(commits, 'feat', 'New Features') }}
+{{ print_group(commits, 'fix', 'Bug Fixes') }}
+{{ print_group(commits, 'refactor', 'Refactoring') }}
+{{ print_group(commits, 'perf', 'Performance Enhancements') }}
+{{ print_group(commits, 'opt', 'Optimizations') }}
+{{ print_group(commits, 'docs', 'Documentation Changes') }}
+{{ print_group(commits, 'chore', 'Administration and Chores') }}
+{% endmacro %}
+
+{% macro print_comments(comments) %}
+{% if comments %}
+# Comments
+{% for comment in comments %}
+{{ comment }}
+
+{% endfor %}
+{% endif %}
+{% endmacro %}
