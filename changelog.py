@@ -168,12 +168,9 @@ class Changelog:
         while '\n\n\n' in changelog:
             changelog = changelog.replace('\n\n\n', '\n\n')
 
-        if len(changelog) == 0:
-            changelog = 'Security updates and latest firmware'
-
         changes = changelog.strip()
         if len(changes) == 0:
-            changes = 'Security updates and latest firmware'
+            changes = 'Security updates'
 
         # fix embedded links to issues
         # explicitly referenced repo
@@ -225,6 +222,7 @@ class Changelog:
                 tmp.write(tmpl + '\n\n')
                 content = re.sub(r'^#', '##', content, flags=re.M)
                 hdr = '## '
+                changelog_entry_title = '#'+changelog_entry_title
             else:
                 hdr = '# '
 
@@ -235,7 +233,7 @@ class Changelog:
                 with open(changelog_file, 'r') as old:
                     ok = False
                     for line in old:
-                        if line.startswith(hdr) and not line.startswith(changelog_entry_title):
+                        if not ok and line.startswith(hdr) and not line.startswith(changelog_entry_title):
                             ok = True
                         if not ok:
                             continue
