@@ -34,7 +34,7 @@ from collections import defaultdict
 import git
 from jinja2 import Environment, FileSystemLoader
 
-__version__ = '0.0.1'
+__version__ = '0.0.2'
 __author__ = 'Aliaksei Stratsilatau'
 __license__ = 'MIT'
 
