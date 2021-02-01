@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
-"""A tool to generate changelogfrom a git repository."""
+"""A tool to generate changelog markdown from a git repository."""
 
 # Copyright (c) 2021 Aliaksei Stratsilatau
 #
@@ -51,7 +51,7 @@ class Commits:
             self.add_commit(commit)
             if len(commit.comment) > 0:
                 self.comments.append(
-                    '**'+commit.subject.split('(')[0].strip()+'**\n\n' + commit.comment)
+                    '\n**'+commit.subject.split('(')[0].strip()+'**\n\n' + commit.comment)
 
     def add_commit(self, commit):
         self.groups[commit.category].append(commit)
@@ -68,17 +68,11 @@ class Commit:
         self.date = datetime.datetime.fromtimestamp(commit.committed_date)
         self.commit_hash = commit.hexsha
         self.message = commit.message.strip()
-        lines = self.fix_links(self.message).splitlines()
+        lines = self.message.splitlines()
         self.subject = lines[0].strip()
         del lines[0]
         self.comment = '\n'.join(lines).strip()
         self.category, self.specific, self.description = self.categorize()
-
-    def fix_links(self, str):
-        # fix embedded links to issues
-        p = re.compile(r'([a-z+-]+\/[a-z-]+)\#([0-9-]+)')
-        fixed = p.sub(r'[`issue \2`](http://github.com/\1/issues/\2)', str)
-        return fixed
 
     def categorize(self):
         match = re.match(r'(\w+)(\(\w+\))?:\s*(.*)', self.subject)
@@ -99,19 +93,19 @@ class Commit:
 
 
 class Changelog:
-    def __init__(self, remote, token):
-        # find repository
-        if remote:
-            self.remote = remote
-        else:
-            self.remote = 'uavos/apx-releases'
+    def __init__(self):
+        self.changes = ''
 
+        # find repository
         self.repo = git.Repo(search_parent_directories=True)
         assert not self.repo.bare
-        print('Deploying project \'' +
-              self.repo.working_tree_dir.split('/')[-1] + '\'...')
 
-        self.branch = 'master'
+        self.repo_name = '/'.join(self.repo.remotes.origin.url.replace(':', '/').split('.git')
+                                  [0].split('/')[-2:])
+
+        print('Collecting changelog for \'{}\'...'.format(self.repo_name))
+
+        self.branch = 'main'
         for b in self.repo.git.branch('--contains', self.repo.head.commit.hexsha).split('\n'):
             b = b.replace('*', '').replace(' ', '')
             if b.startswith('('):
@@ -121,136 +115,33 @@ class Changelog:
             self.branch = b
             break
         # branch = repo.git.rev_parse('--abbrev-ref', 'HEAD')
-        print('Branch: ' + self.branch)
+        print('Branch: {}'.format(self.branch))
         self.commit = self.repo.git.rev_parse('HEAD')
-        print('Commit: ' + self.commit)
+        print('Commit: {}'.format(self.commit))
 
         self.date = datetime.datetime.fromtimestamp(
             self.repo.head.commit.committed_date)
-        print('Date: ' + self.date.strftime('%x %X'))
+        print('Date: {}'.format(self.date))
 
         # find current version
         self.version = '.'.join(
             self.repo.git.describe('--always', '--tags', '--match=v*.*')
                 .strip()
-                .replace('v', '')
                 .replace('-', '.')
-                .split('.')[0:3]
+                .split('.')[:3]
         ).strip()
         assert len(self.version) > 0
-        print('Version: ' + self.version)
+        print('Version: {}'.format(self.version))
 
-        # find deploy repo
-        remote_name = os.path.split(self.remote)[1]
-        deploy_repo_dir = os.path.join(
-            self.repo.working_tree_dir, '..', remote_name)
-        if not os.path.exists(deploy_repo_dir):
-            print('Clone \'{}\'...'.format(remote_name))
-            self.deploy_repo = git.Repo.clone_from(
-                'https://{0}@github.com/{1}.git'.format(token, self.remote), deploy_repo_dir)
-        else:
-            print('Pull \'{}\'...'.format(remote_name))
-            self.deploy_repo = git.Repo(deploy_repo_dir)
-            # self.deploy_repo.remotes.origin.pull()
+    def update_changes(self, from_ref, do_comments=True, releases_repo_name=None):
 
-        # find published version
-        version_pub = self.deploy_repo.git.describe(
-            '--abbrev=0', '--tags', '--always', '--match=*.*')
-        print('Latest published version: ' + version_pub)
+        if not releases_repo_name:
+            releases_repo_name = self.repo_name
+        self.releases_repo_name = releases_repo_name
 
-        self.changes = None
-        self.published = False
+        self.from_ref = from_ref
 
-    def update(self):
-        if self.changes:
-            return
-        # check if already published
-        self.published = False
-        prev_ref = ''
-        try:
-            tag_apx = self.deploy_repo.tags['apx']
-            prev_ref = tag_apx.tag.message.strip().split('\n')[0]
-            print('Latest published commit: ' + prev_ref)
-            if prev_ref == self.commit:
-                print('ALREADY DEPLOYED')
-                self.published = True
-        except IndexError:
-            print('Clean releases repository')
-
-        # release notes file
-        notes_path = os.path.join(self.deploy_repo.working_tree_dir, 'notes')
-        if not os.path.exists(notes_path):
-            os.makedirs(notes_path)
-        notes_file = os.path.join(
-            notes_path, 'release-{}.md'.format(self.version))
-        if not self.published:
-            self.changes = self.update_changes(prev_ref)
-            self.changes = re.sub(r'^#', '####', self.changes, flags=re.M)
-            with open(notes_file, 'w') as f:
-                f.write(self.changes)
-                f.close()
-            self.deploy_repo.index.add([notes_file])
-        else:
-            with open(notes_file, 'r') as f:
-                self.changes = f.read()
-                f.close()
-
-    def update_changes(self, prev_ref):
-        changes = ''
-        if prev_ref != '':
-            changes = self.get_changelog(prev_ref, do_comments=True)
-
-        if len(changes) == 0:
-            changes = 'Security updates and latest firmware `{}`'.format(
-                self.date.strftime('%x'))
-
-        changelog_file = os.path.join(
-            self.deploy_repo.working_tree_dir, 'CHANGELOG.md')
-        changelog_tmp = changelog_file + '.tmp'
-
-        changelog_entry_title = \
-            '## [Version ' + self.version + '](https://github.com/{}/releases/tag/'.format(self.remote) + self.version + ')' \
-            + ' (' + self.date.strftime('%x') + ')'
-
-        changelog_entry_header = \
-            '> Branch: `' + self.branch + '`' \
-            + '  \nDate: `' + self.date.strftime('%x %X') + '`'
-        if prev_ref != '':
-            changelog_entry_header += \
-                '  \nDiff: [uavos/apx](https://github.com/uavos/apx/compare/' + \
-                prev_ref + '...' + self.repo.head.commit.hexsha + ')'
-
-        # check for dirty run
-        if os.path.exists(changelog_tmp) and not os.path.exists(changelog_file):
-            os.rename(changelog_tmp, changelog_file)
-
-        with open(changelog_tmp, 'w') as tmp:
-            tmp.write('# Changelog\n\n'
-                      'All notable changes to **APX Software** will be documented in this file.  \n'
-                      'For more information refer to [docs.uavos.com](http://docs.uavos.com).\n\n')
-            tmp.write(changelog_entry_title + '\n\n')
-            tmp.write(changelog_entry_header + '\n\n')
-            tmp.write(re.sub(r'^#', '###', changes, flags=re.M) + '\n\n')
-            # append tail from old
-            if os.path.exists(changelog_file):
-                with open(changelog_file, 'r') as old:
-                    ok = False
-                    for line in old:
-                        if line.startswith('## ') and not line.startswith(changelog_entry_title):
-                            ok = True
-                        if not ok:
-                            continue
-                        tmp.write(line)
-                    old.close()
-            tmp.close()
-            if os.path.exists(changelog_file):
-                os.unlink(changelog_file)
-            os.rename(changelog_tmp, changelog_file)
-
-        self.deploy_repo.index.add([changelog_file])
-        return changes
-
-    def get_changelog(self, from_ref, title=None, do_comments=False):
+        self.changes = ''
         commits = list(self.repo.iter_commits(from_ref + ".."))
         commits = list(map(Commit, commits))  # Convert to Commit objects
         commits = sorted(commits, key=lambda c: c.date)
@@ -270,7 +161,6 @@ class Changelog:
             comments = None
 
         changelog = template.render(
-            title=title,
             commits=commits,
             comments=comments
         ).strip().replace('\r', '')
@@ -278,35 +168,124 @@ class Changelog:
         while '\n\n\n' in changelog:
             changelog = changelog.replace('\n\n\n', '\n\n')
 
-        return changelog
+        if len(changelog) == 0:
+            changelog = 'Security updates and latest firmware'
 
-    def publish(self):
-        deploy_msg = 'Update to version ' + self.version
-        if len(self.deploy_repo.index.diff('HEAD')) > 0:
-            print('New commit to deploy repo: ' + deploy_msg)
-            self.deploy_repo.git.commit('-a', '-S', '-m', deploy_msg)
-        else:
-            print('Deploy repo already committed (' +
-                  self.deploy_repo.head.commit.message.strip() + ')')
-            assert self.deploy_repo.head.commit.message.strip() == deploy_msg
+        changes = changelog.strip()
+        if len(changes) == 0:
+            changes = 'Security updates and latest firmware'
 
-        # create tags
-        self.deploy_repo.create_tag(
-            '-s', self.version, force=True, message=deploy_msg)
-        self.deploy_repo.create_tag('apx', force=True, message=self.commit)
+        # fix embedded links to issues
+        # explicitly referenced repo
+        p = re.compile(r'([a-z+-]+\/[a-z-]+)\#([0-9-]+)')
+        changes = p.sub(
+            r'[`\2`](https://github.com/\1/issues/\2)', changes)
 
-        # Push deploy to git
-        if sum(1 for c in self.deploy_repo.iter_commits('origin/HEAD..HEAD')) > 0:
-            print('Pushing deploy tags to git...')
-            self.deploy_repo.remotes.origin.push(['-f', '--tags'])
-            print('Pushing deploy commits to git...')
-            self.deploy_repo.remotes.origin.push()
-        else:
-            print('Deploy repo already pushed')
+        # no referenced repo
+        p = re.compile(r'\#([0-9-]+)')
+        changes = p.sub(
+            r'[`\1`](https://github.com/{}/issues/\1)'.format(self.releases_repo_name), changes)
+
+        self.changes = changes
+
+    def update_log(self, changelog_file, title=None, releases_repo_name=None):
+        if not releases_repo_name:
+            releases_repo_name = self.repo_name
+        if not title:
+            title = 'Version'
+
+        changelog_entry_title = '# [{0} {1}](https://github.com/{2}/releases/tag/{1}) ({3})'.format(
+            title, self.version, releases_repo_name, self.date.strftime('%x'))
+
+        changelog_entry_header = '> Branch: `{0}`'.format(
+            self.branch)
+
+        changelog_entry_header += '\\\n> Date: `{0}`'.format(
+            self.date.strftime('%x %X'))
+
+        changelog_entry_header += '\\\n> Diff: [{0}](https://github.com/{0}/compare/{1}...{2})'.format(
+            self.repo_name, self.from_ref, self.repo.head.commit.hexsha)
+
+        # update changelog file
+        tmpl = None
+        tmpl_file = os.path.join(
+            self.repo.working_tree_dir, '.changelog')
+        if os.path.exists(tmpl_file):
+            with open(tmpl_file, 'r') as f:
+                tmpl = f.read().strip()
+
+        changelog_tmp = changelog_file + '.tmp'
+
+        with open(changelog_tmp, 'w') as tmp:
+            content = changelog_entry_title + '\n\n'
+            content += changelog_entry_header + '\n\n'
+            content += re.sub(r'^#', '##', self.changes, flags=re.M) + '\n\n'
+
+            if tmpl:
+                tmp.write(tmpl + '\n\n')
+                content = re.sub(r'^#', '##', content, flags=re.M)
+                hdr = '## '
+            else:
+                hdr = '# '
+
+            tmp.write(content)
+
+            # append tail from old
+            if os.path.exists(changelog_file):
+                with open(changelog_file, 'r') as old:
+                    ok = False
+                    for line in old:
+                        if line.startswith(hdr) and not line.startswith(changelog_entry_title):
+                            ok = True
+                        if not ok:
+                            continue
+                        tmp.write(line)
+                    old.close()
+            tmp.close()
+            if os.path.exists(changelog_file):
+                os.unlink(changelog_file)
+            os.rename(changelog_tmp, changelog_file)
 
 
 def main():
     """Main function."""
+    parser = argparse.ArgumentParser(
+        description='Changelog generator for git repository')
+    parser.add_argument('--ref', action='store', required=True,
+                        help='git ref from which to collect changes')
+    parser.add_argument('--comments', action='store_true', default=True,
+                        help='append comments section')
+    parser.add_argument('--out', action='store',
+                        help='output filename to store collected changelog markdown text')
+    parser.add_argument('--releases', action='store',
+                        help='releases repository name if different')
+    parser.add_argument('--log', action='store',
+                        help='filename of changelog file to update')
+    parser.add_argument('--title', action='store',
+                        help='project title for changelog file updates')
+    parser.add_argument('--ver', action='store',
+                        help='project version for changelog file updates')
+    args = parser.parse_args()
+
+    ch = Changelog()
+
+    if args.ver:
+        ch.version = args.ver
+
+    if args.ref:
+        ch.update_changes(args.ref, args.comments, args.releases)
+
+    if args.out:
+        with open(args.out, 'w') as f:
+            f.write(ch.changes)
+            f.write('\n')
+    else:
+        print('Changes since {}:\n----\n{}\n----'.format(args.ref, ch.changes))
+
+    if args.log:
+        print('Updating changelog: {}'.format(args.log))
+        ch.update_log(args.log, args.title, args.releases)
+
     return 0
 
 

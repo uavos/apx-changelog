@@ -2,7 +2,7 @@
 {% if group in commits.groups %}
 # {{ title }}
 {% for commit in commits.groups[group] %}
-* {{ "`" + commit.specific + "` " if commit.specific }}{{ commit.description.strip() }}
+ * {{ "`" + commit.specific + "` " if commit.specific }}{{ commit.description.strip() }}
 {% endfor %}
 
 {% endif %}
