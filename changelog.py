@@ -191,8 +191,8 @@ class Changelog:
         if not title:
             title = 'Version'
 
-        changelog_entry_title = '# [{0} {1}](https://github.com/{2}/releases/tag/{1}) ({3})'.format(
-            title, self.version, releases_repo_name, self.date.strftime('%x'))
+        changelog_entry_title = '# [{0} {1}](https://github.com/{2}/releases/tag/{3}) ({4})'.format(
+            title, self.version, releases_repo_name, self.version.replace('v', 'release-'), self.date.strftime('%x'))
 
         changelog_entry_header = '> Branch: `{0}`'.format(
             self.branch)
@@ -262,13 +262,13 @@ def main():
     parser.add_argument('--title', action='store',
                         help='project title for changelog file updates')
     parser.add_argument('--ver', action='store',
-                        help='project version for changelog file updates')
+                        help='project version X.Y[.Z] for changelog file updates')
     args = parser.parse_args()
 
     ch = Changelog()
 
     if args.ver:
-        ch.version = args.ver
+        ch.version = 'v'+args.ver
 
     if args.ref:
         ch.update_changes(args.ref, args.comments, args.releases)

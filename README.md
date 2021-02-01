@@ -30,7 +30,7 @@ optional arguments:
   --releases RELEASES  releases repository name if different
   --log LOG            filename of changelog file to update
   --title TITLE        project title for changelog file updates
-  --ver VER            project version for changelog file updates
+  --ver VER            project version X.Y[.Z] for changelog file updates
 ```
 
 The utility will parse commits and include commit messages starting with the following keywords:
@@ -64,6 +64,8 @@ A multi-line commit message will add `comments` section in changelog, displaying
 
 The changelog file specified with the `--log` option can have a template header, written in [`/.changelog`](.changelog) file.
 
-## Versioning
+## Repository tags
 
-The git repository can have tags in the format `v1.2` to simplify versioning (`v<MAJOR>.<MINOR>.<BUILD>`) using `git.describe('--always', '--tags', '--match=v*.*')`.
+The git repository can have tags in the format `v1.2` to simplify versioning (`vZ.Y.Z`) using `git.describe('--always', '--tags', '--match=v*.*')`.
+
+Releases must be tagged in the format `release-X.Y.Z`.
