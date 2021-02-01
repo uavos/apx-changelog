@@ -150,7 +150,8 @@ class Changelog:
 
         # Set up the templating engine
         template_dir = os.path.join(os.path.dirname(
-            os.path.abspath(__file__)), 'templates'),
+            os.path.abspath(__file__)), 'templates')
+        print(template_dir)
         loader = FileSystemLoader(template_dir)
         env = Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
         template = env.get_template('changes.jinja2')
