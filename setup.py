@@ -8,7 +8,6 @@ import os
 import re
 import glob
 from setuptools import setup, find_packages
-import git
 
 here = os.path.abspath(os.path.dirname(__file__))
 readme = open(os.path.join(here, 'README.md')).read()
