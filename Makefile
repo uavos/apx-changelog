@@ -21,13 +21,13 @@ release: update-changelog
 	@git commit --amend --no-edit
 	@git tag -f release-$(shell cat .version)
 	@git tag -f changelog
-	# @git push
-	# @git push --tags
-	# @git fetch . $(GIT_BRANCH):release -f
-	# @git push origin release -f
+	@git push -f
+	@git push -f --tags
+	@git fetch . $(GIT_BRANCH):release -f
+	@git push origin release -f
 
 update-changelog:
 	@echo "Updating changelog..."
-	# @if git diff-index --quiet HEAD --; then echo "No changes"; else echo "Uncommitted changes" && exit 1; fi
+	@if git diff-index --quiet HEAD --; then echo "No changes"; else echo "Uncommitted changes" && exit 1; fi
 	@./apxchangelog.py --ref 'changelog' --log CHANGELOG.md --mkver .version
 
