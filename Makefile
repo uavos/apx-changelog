@@ -13,7 +13,7 @@ install:
 	@pip install dist/*.whl
 
 uninstall:
-	@pip install apx-changelog
+	@pip uninstall -y apx-changelog
 
 release: update-changelog
 	@echo "Requesting release..."

@@ -26,9 +26,15 @@ def versionfromfile(*filepath):
             'Unable to find version string in {}.'.format(infile))
 
 
+def versionfile(*filepath):
+    with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), *filepath)) as fp:
+        return fp.read().strip()
+
+
 setup(
     name='apx-changelog',
-    version=versionfromfile('apxchangelog.py'),
+    # version=versionfromfile('apxchangelog.py'),
+    version=versionfile('.version'),
     author='Aliaksei Stratsiatau',
     author_email='sa@uavos.com',
     description='Generate changelog from a git repository',
@@ -42,7 +48,7 @@ setup(
     url='https://github.com/uavos/apx-changelog',
     packages=['apxchangelog'],
     package_dir={'apxchangelog': '.'},
-    package_data={'apxchangelog': ['templates/*']},
+    package_data={'apxchangelog': ['templates/*', '.version']},
     include_package_data=True,
     # py_modules=['apxchangelog'],
     entry_points={'console_scripts': ['apx-changelog=apxchangelog:main']},

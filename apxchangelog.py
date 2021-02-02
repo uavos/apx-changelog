@@ -34,9 +34,12 @@ from collections import defaultdict
 import git
 from jinja2 import Environment, FileSystemLoader
 
-__version__ = '0.0.3'
+__version__ = '0.0.1'
 __author__ = 'Aliaksei Stratsilatau'
 __license__ = 'MIT'
+
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '.version')) as fp:
+    __version__ = fp.read().strip()
 
 
 class Commits:
