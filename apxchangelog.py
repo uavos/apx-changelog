@@ -34,15 +34,12 @@ from collections import defaultdict
 import git
 from jinja2 import Environment, FileSystemLoader
 
-__version__ = '0.0.1'  # is default when .version is not there
+__version__ = '0.0.1'
 __author__ = 'Aliaksei Stratsilatau'
 __license__ = 'MIT'
 
-version_file = os.path.join(os.path.dirname(
-    os.path.abspath(__file__)), '.version')
-if os.path.exists(version_file):
-    with open(version_file, 'r') as f:
-        __version__ = f.read()
+with open(os.path.join(os.path.abspath(os.path.dirname(__file__)), '.version')) as fp:
+    __version__ = fp.read().strip()
 
 
 class Commits:
