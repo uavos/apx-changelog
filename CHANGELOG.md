@@ -2,6 +2,15 @@
 
 All changes to **apx-changelog** package will be documented in this file.
 
+## [Version v1.0.14](https://github.com/uavos/apx-changelog/releases/tag/release-1.0.14) (02/02/21)
+
+> Branch: `main`\
+> Date: `02/02/21 14:34:26`\
+> Diff: [uavos/apx-changelog](https://github.com/uavos/apx-changelog/compare/changelog...2c91c5118b79826143f48c23a887304b12d91add)
+
+### Bug Fixes
+* requirements
+
 ## [Version v1.0.13](https://github.com/uavos/apx-changelog/releases/tag/release-1.0.13) (02/02/21)
 
 > Branch: `main`\

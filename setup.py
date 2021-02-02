@@ -40,7 +40,7 @@ setup(
     long_description=readme,
     long_description_content_type='text/markdown',
     # setup_requires=[''],
-    install_requires=['regex'],
+    install_requires=['regex', 'Jinja2', 'GitPython'],
     python_requires='>=3.5',
     license='MIT',
     keywords='',
