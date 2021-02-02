@@ -1,8 +1,19 @@
 GIT_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 
 
-all:
+all: clean build
+
+build:
 	@python setup.py sdist bdist_wheel
+
+clean:
+	@rm -Rf build dist *.egg-info
+
+install:
+	@pip install dist/*.whl
+
+uninstall:
+	@pip install apx-changelog
 
 release: update-changelog
 	@echo "Requesting release..."
