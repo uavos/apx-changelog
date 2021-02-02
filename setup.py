@@ -51,7 +51,7 @@ setup(
     include_package_data=True,
     # py_modules=['apxchangelog'],
     entry_points={'console_scripts': ['apx-changelog=apxchangelog:main']},
-    data_files=[('templates', glob.glob('templates/*.jinja2'))],
+    # data_files=[('templates', glob.glob('templates/*.jinja2'))],
     classifiers=['Development Status :: 5 - Production/Stable',
                  'License :: OSI Approved :: MIT License',
                  'Environment :: Console',
