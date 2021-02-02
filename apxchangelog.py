@@ -34,9 +34,15 @@ from collections import defaultdict
 import git
 from jinja2 import Environment, FileSystemLoader
 
-__version__ = '0.0.2'
+__version__ = '0.0.1'  # is default when .version is not there
 __author__ = 'Aliaksei Stratsilatau'
 __license__ = 'MIT'
+
+version_file = os.path.join(os.path.dirname(
+    os.path.abspath(__file__)), '.version')
+if os.path.exists(version_file):
+    with open(version_file, 'r') as f:
+        __version__ = f.read()
 
 
 class Commits:
@@ -142,7 +148,12 @@ class Changelog:
         self.from_ref = from_ref
 
         self.changes = ''
-        commits = list(self.repo.iter_commits(from_ref + ".."))
+        try:
+            commits = list(self.repo.iter_commits(from_ref + ".."))
+        except git.exc.GitCommandError:
+            commits = list(self.repo.iter_commits())
+            self.from_ref = 'initial commit ({})'.format(commits[0])
+
         commits = list(map(Commit, commits))  # Convert to Commit objects
         commits = sorted(commits, key=lambda c: c.date)
         commits = list(filter(lambda c: c.category, commits))
@@ -264,6 +275,8 @@ def main():
                         help='project title for changelog file updates')
     parser.add_argument('--ver', action='store',
                         help='project version X.Y[.Z] for changelog file updates')
+    parser.add_argument('--mkver', action='store',
+                        help='filename to store current version (X.Y.Z)')
     args = parser.parse_args()
 
     ch = Changelog()
@@ -279,11 +292,15 @@ def main():
             f.write(ch.changes)
             f.write('\n')
     else:
-        print('Changes since {}:\n----\n{}\n----'.format(args.ref, ch.changes))
+        print('Changes since {}:\n----\n{}\n----'.format(ch.from_ref, ch.changes))
 
     if args.log:
         print('Updating changelog: {}'.format(args.log))
         ch.update_log(args.log, args.title, args.releases)
+
+    if args.mkver:
+        with open(args.mkver, 'w') as f:
+            f.write(ch.version.replace('v', ''))
 
     return 0
 

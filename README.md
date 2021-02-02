@@ -1,6 +1,6 @@
 # apx-changelog
 
-PyPI package to generate changelogs from a git repository
+PyPI package to generate changelogs from a git repository.
 
 For examples, look at changelogs of the following projects:
 
@@ -31,6 +31,7 @@ optional arguments:
   --log LOG            filename of changelog file to update
   --title TITLE        project title for changelog file updates
   --ver VER            project version X.Y[.Z] for changelog file updates
+  --mkver MKVER        filename to store current version (X.Y.Z)
 ```
 
 The utility will parse commits and include commit messages starting with the following keywords:
@@ -54,7 +55,7 @@ Will produce the following section in the changelog output:
 ```text
 # Bug Fixes
 
- * a fix of a bug (closes [`123`](https://github.com/user/repo/issues/123))
+* a fix of a bug (closes [`123`](https://github.com/user/repo/issues/123))
 
 ```
 

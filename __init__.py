@@ -1,4 +1,3 @@
-from .apxchangelog import main, Changelog
-from .apxchangelog import __version__
+from .apxchangelog import main, Changelog, __version__
 
 __all__ = ['main', 'Changelog', '__version__']
