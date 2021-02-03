@@ -144,6 +144,8 @@ class Changelog:
 
         self.from_ref = from_ref
 
+        self.from_hexsha = self.repo.git.rev_parse(from_ref)
+
         self.changes = ''
         try:
             commits = list(self.repo.iter_commits(from_ref + ".."))
@@ -159,7 +161,6 @@ class Changelog:
         # Set up the templating engine
         template_dir = os.path.join(os.path.dirname(
             os.path.abspath(__file__)), 'templates')
-        print(template_dir)
         loader = FileSystemLoader(template_dir)
         env = Environment(loader=loader, trim_blocks=True, lstrip_blocks=True)
         template = env.get_template('changes.jinja2')
@@ -209,8 +210,9 @@ class Changelog:
         changelog_entry_header += '\\\n> Date: `{0}`'.format(
             self.date.strftime('%x %X'))
 
-        changelog_entry_header += '\\\n> Diff: [{0}](https://github.com/{0}/compare/{1}...{2})'.format(
-            self.repo_name, self.from_ref, self.repo.head.commit.hexsha)
+        if self.from_hexsha:
+            changelog_entry_header += '\\\n> Diff: [{0}](https://github.com/{0}/compare/{1}...{2})'.format(
+                self.repo_name, self.from_hexsha, self.repo.head.commit.hexsha)
 
         # update changelog file
         tmpl = None
