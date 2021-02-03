@@ -199,7 +199,7 @@ class Changelog:
         if not releases_repo_name:
             releases_repo_name = self.repo_name
         if not title:
-            title = 'Version'
+            title = 'Release'
 
         changelog_entry_title = '# [{0} {1}](https://github.com/{2}/releases/tag/{3}) ({4})'.format(
             title, self.version, releases_repo_name, self.version.replace('v', 'release-'), self.date.strftime('%x'))
