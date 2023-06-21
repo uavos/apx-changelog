@@ -2,6 +2,16 @@
 
 All changes to **apx-changelog** package will be documented in this file.
 
+## [Release v1.0.18](https://github.com/uavos/apx-changelog/releases/tag/release-1.0.18) (06/21/23)
+
+> Branch: `main`\
+> Date: `06/21/23 14:07:45`\
+> Diff: [uavos/apx-changelog](https://github.com/uavos/apx-changelog/compare/25a74e84635a277c32308ea6db8b289d049ba5d1...dd2d1382903f62b3f695f602f1590d0f14c094a7)
+
+### Bug Fixes
+* version argument usage
+* makefile uses python3
+
 ## [Release v1.0.16](https://github.com/uavos/apx-changelog/releases/tag/release-1.0.16) (02/03/21)
 
 > Branch: `main`\

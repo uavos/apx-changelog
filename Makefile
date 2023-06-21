@@ -4,16 +4,16 @@ GIT_BRANCH = $(shell git rev-parse --abbrev-ref HEAD)
 all: clean build
 
 build:
-	@python setup.py sdist bdist_wheel
+	@python3 setup.py sdist bdist_wheel
 
 clean:
 	@rm -Rf build dist *.egg-info
 
 install:
-	@pip install dist/*.whl
+	@pip3 install dist/*.whl
 
 uninstall:
-	@pip uninstall -y apx-changelog
+	@pip3 uninstall -y apx-changelog
 
 release: update-changelog
 	@echo "Requesting release..."
@@ -29,5 +29,5 @@ release: update-changelog
 update-changelog:
 	@echo "Updating changelog..."
 	@if git diff-index --quiet HEAD --; then echo "No changes"; else echo "Uncommitted changes" && exit 1; fi
-	@./apxchangelog.py --ref 'changelog' --log CHANGELOG.md --mkver .version
+	@python3 apxchangelog.py --ref 'changelog' --log CHANGELOG.md --mkver .version
 
