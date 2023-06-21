@@ -96,7 +96,7 @@ class Commit:
 
 
 class Changelog:
-    def __init__(self):
+    def __init__(self, ver=None):
         self.changes = ''
 
         # find repository
@@ -127,12 +127,15 @@ class Changelog:
         print('Date: {}'.format(self.date))
 
         # find current version
-        self.version = '.'.join(
-            self.repo.git.describe('--always', '--tags', '--match=v*.*')
-                .strip()
-                .replace('-', '.')
-                .split('.')[:3]
-        ).strip()
+        if ver:
+            self.version = 'v'+ver
+        else:
+            self.version = '.'.join(
+                self.repo.git.describe('--always', '--tags', '--match=v*.*')
+                    .strip()
+                    .replace('-', '.')
+                    .split('.')[:3]
+            ).strip()
         assert len(self.version) > 0
         print('Version: {}'.format(self.version))
 
@@ -278,7 +281,7 @@ def main():
                         help='filename to store current version (X.Y.Z)')
     args = parser.parse_args()
 
-    ch = Changelog()
+    ch = Changelog(args.ver)
 
     if args.ver:
         ch.version = 'v'+args.ver
