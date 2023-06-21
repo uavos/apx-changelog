@@ -12,13 +12,13 @@ For examples, look at changelogs of the following projects:
 Must be run in the root of a git repository.
 
 ```text
-usage: changelog.py [-h] --ref REF
-                    [--comments]
-                    [--out OUT]
-                    [--releases RELEASES] 
-                    [--log LOG]
-                    [--title TITLE]
-                    [--ver VER]
+usage: apx-changelog [-h] --ref REF
+                     [--comments]
+                     [--out OUT]
+                     [--releases RELEASES]
+                     [--log LOG]
+                     [--title TITLE]
+                     [--ver VER]
 
 Changelog generator for git repository
 
